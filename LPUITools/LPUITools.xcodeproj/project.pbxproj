@@ -12,6 +12,8 @@
 		F8E3C6CE1E7CD7EE008EBFD7 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F8E3C6CC1E7CD7EE008EBFD7 /* Main.storyboard */; };
 		F8E3C6D01E7CD7EE008EBFD7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F8E3C6CF1E7CD7EE008EBFD7 /* Assets.xcassets */; };
 		F8E3C6D31E7CD7EE008EBFD7 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F8E3C6D11E7CD7EE008EBFD7 /* LaunchScreen.storyboard */; };
+		F8E3C6DD1E7CDB2D008EBFD7 /* TestVideoPlayerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E3C6DC1E7CDB2D008EBFD7 /* TestVideoPlayerViewController.swift */; };
+		F8E3C6E01E7CDD98008EBFD7 /* LPVideoPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8E3C6DF1E7CDD98008EBFD7 /* LPVideoPlayer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,6 +24,8 @@
 		F8E3C6CF1E7CD7EE008EBFD7 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F8E3C6D21E7CD7EE008EBFD7 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		F8E3C6D41E7CD7EE008EBFD7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F8E3C6DC1E7CDB2D008EBFD7 /* TestVideoPlayerViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TestVideoPlayerViewController.swift; sourceTree = "<group>"; };
+		F8E3C6DF1E7CDD98008EBFD7 /* LPVideoPlayer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LPVideoPlayer.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,6 +58,7 @@
 		F8E3C6C71E7CD7EE008EBFD7 /* LPUITools */ = {
 			isa = PBXGroup;
 			children = (
+				F8E3C6DA1E7CDAA7008EBFD7 /* UITools */,
 				F8E3C6C81E7CD7EE008EBFD7 /* AppDelegate.swift */,
 				F8E3C6CA1E7CD7EE008EBFD7 /* ViewController.swift */,
 				F8E3C6CC1E7CD7EE008EBFD7 /* Main.storyboard */,
@@ -62,6 +67,31 @@
 				F8E3C6D41E7CD7EE008EBFD7 /* Info.plist */,
 			);
 			path = LPUITools;
+			sourceTree = "<group>";
+		};
+		F8E3C6DA1E7CDAA7008EBFD7 /* UITools */ = {
+			isa = PBXGroup;
+			children = (
+				F8E3C6DB1E7CDAA7008EBFD7 /* VideoPlayer */,
+			);
+			path = UITools;
+			sourceTree = "<group>";
+		};
+		F8E3C6DB1E7CDAA7008EBFD7 /* VideoPlayer */ = {
+			isa = PBXGroup;
+			children = (
+				F8E3C6DE1E7CDB74008EBFD7 /* LPVideoPlayer */,
+				F8E3C6DC1E7CDB2D008EBFD7 /* TestVideoPlayerViewController.swift */,
+			);
+			path = VideoPlayer;
+			sourceTree = "<group>";
+		};
+		F8E3C6DE1E7CDB74008EBFD7 /* LPVideoPlayer */ = {
+			isa = PBXGroup;
+			children = (
+				F8E3C6DF1E7CDD98008EBFD7 /* LPVideoPlayer.swift */,
+			);
+			path = LPVideoPlayer;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -138,6 +168,8 @@
 			files = (
 				F8E3C6CB1E7CD7EE008EBFD7 /* ViewController.swift in Sources */,
 				F8E3C6C91E7CD7EE008EBFD7 /* AppDelegate.swift in Sources */,
+				F8E3C6E01E7CDD98008EBFD7 /* LPVideoPlayer.swift in Sources */,
+				F8E3C6DD1E7CDB2D008EBFD7 /* TestVideoPlayerViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

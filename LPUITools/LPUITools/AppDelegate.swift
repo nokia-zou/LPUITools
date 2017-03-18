@@ -2,7 +2,7 @@
 //  AppDelegate.swift
 //  LPUITools
 //
-//  Created by 朋 邹 on 2017/3/18.
+//  Created by LP on 2017/3/18.
 //  Copyright © 2017年 zou. All rights reserved.
 //
 
