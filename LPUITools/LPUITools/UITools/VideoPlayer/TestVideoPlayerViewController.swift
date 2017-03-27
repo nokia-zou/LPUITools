@@ -9,27 +9,24 @@
 import UIKit
 
 class TestVideoPlayerViewController: UIViewController {
-
+    
+    //  test
+    fileprivate let player: LPPlayer = LPPlayer(frame: CGRect(x: 0, y: 80, width: UIScreen.main.bounds.size.width, height: UIScreen.main.bounds.size.width * 0.76))
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
         // Do any additional setup after loading the view.
+        self.view.backgroundColor = UIColor.white
+        
+        self.view.addSubview(self.player)
+        
+        self.player.play(url: URL(string: "http://mvideo.spriteapp.cn/video/2017/0326/58d6aa21f16a2.mp4")!)
     }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-    
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
-    }
-    */
 
 }
