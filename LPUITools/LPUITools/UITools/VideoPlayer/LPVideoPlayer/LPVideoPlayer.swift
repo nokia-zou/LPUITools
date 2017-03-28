@@ -9,26 +9,18 @@
 import UIKit
 import AVFoundation
 
+//  播放器状态定义
 enum LPPlayerStatus {
     case loading        // 加载等待中
     case playing        // 正在播放
     case pause          // 暂停
     case playedComplete // 播放结束
+    case stop           // 终止播放
     case error          // 出现错误
 }
 
-enum LPPlayerEvent {
-    case startLoad      // 开始加载
-    case resumePlay     // 回复播放
-    case stop           // 停止
-}
-
-
 protocol LPPlayerDelegate : class {
     func lpPlayer(player: LPPlayer ,changeStatus status: LPPlayerStatus)
-    
-    func lpPlayer(player: LPPlayer ,actionEvent event: LPPlayerStatus)
-
     func lpPlayer(player: LPPlayer ,loadedProgress progress: CGFloat)
     func lpPlayer(player: LPPlayer ,playProgress progress: CGFloat)
 }
@@ -37,9 +29,15 @@ class LPPlayer: UIView {
     
     /*
     	@property		delegate
-    	@abstract		media file player layer
+    	@abstract		player delegate
      */
     open weak var delegate: LPPlayerDelegate?
+    
+    /*
+    	@property		loopPlay
+    	@abstract		循环播放播放视频
+     */
+    open var loopPlay: Bool = false
     
     /*
     	@property		player
@@ -91,12 +89,14 @@ class LPPlayer: UIView {
     }
     
     func play(playerItem: AVPlayerItem) {
-        if (self.playerLayer.player == nil) {
+        if (self.playerLayer.player == nil)
+        {
             self.playerLayer.player = AVPlayer(playerItem: playerItem)
             self.playerLayer.player?.allowsExternalPlayback = true;
             self.addPlayerObserver()
         }
-        else {
+        else
+        {
             self.removePlayerObserver()
             self.playerLayer.player?.replaceCurrentItem(with: playerItem)
         }
@@ -106,11 +106,12 @@ class LPPlayer: UIView {
         
         //  添加观察者
         self.addPlayerItemObserver()
+        
+        //  立即播放
+        self.immediatelyPlay = true
     }
     
     func stop() {
-//        _isSeekingProgress = NO;
-        
         self.playerLayer.player?.pause()
         self.removeVideoPlayerNotification()
         self.removePlayerObserver()
@@ -118,11 +119,24 @@ class LPPlayer: UIView {
         self.removePlayerTimeObservers()
         
         //  取消暂停
-        self.immediatelyPlay = false
+        self.immediatelyPlay = true
         
         //  代理
-//        [self delegateEvent:ELVideoPlayerEventStop];
+        self.delegate?.lpPlayer(player: self, changeStatus: LPPlayerStatus.stop)
+    }
     
+    func pause() {
+        self.playerLayer.player?.pause()
+        
+        //  取消暂停
+        self.immediatelyPlay = false
+    }
+    
+    func resume() {
+        self.playerLayer.player?.play()
+        
+        //  取消暂停
+        self.immediatelyPlay = true
     }
     
     func duration() -> CGFloat {
@@ -136,9 +150,7 @@ class LPPlayer: UIView {
         return 0.0 == self.playerLayer.player?.rate
     }
     
-    
     //  MARK: - player config
-    
     fileprivate func addVideoPlayerNotification() {
         NotificationCenter.default.addObserver(self, selector: #selector(self.onAVPlayerItemDidPlayToEndTime(notification:)), name: Notification.Name.AVPlayerItemDidPlayToEndTime, object: self.playerLayer.player?.currentItem)
     }
@@ -174,43 +186,79 @@ class LPPlayer: UIView {
     //  MARK: - kvo
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         
-        if keyPath == "status" {
+        if keyPath == "status"
+        {
             let status = self.playerLayer.player?.currentItem?.status
             if status == AVPlayerItemStatus.readyToPlay {
-                if self.immediatelyPlay {
+                if self.immediatelyPlay
+                {
                     self.playerLayer.player?.play()
                 }
-                else {
+                else
+                {
                     self.playerLayer.player?.pause()
                 }
             }
-            else if status == AVPlayerItemStatus.unknown {
-                
+            else if status == AVPlayerItemStatus.unknown
+            {
+                self.delegate?.lpPlayer(player: self, changeStatus: LPPlayerStatus.error)
+
             }
-            else if status == AVPlayerItemStatus.failed {
-                
+            else if status == AVPlayerItemStatus.failed
+            {
+                self.delegate?.lpPlayer(player: self, changeStatus: LPPlayerStatus.error)
             }
         }
-        else if keyPath == "playbackBufferEmpty" {
-            
+        else if keyPath == "playbackBufferEmpty"
+        {
+            self.delegate?.lpPlayer(player: self, changeStatus: LPPlayerStatus.loading)
         }
-        else if keyPath == "playbackLikelyToKeepUp" {
-            
+        else if keyPath == "playbackLikelyToKeepUp"
+        {
+            if self.immediatelyPlay && self.isPause()
+            {
+                self.resume()
+            }
         }
-        else if keyPath == "loadedTimeRanges" {
+        else if keyPath == "loadedTimeRanges"
+        {
+            let duration = CMTimeGetSeconds((self.playerLayer.player?.currentItem?.duration)!)
+            let bufferTime = self.availableDuration()
             
+            //  进度
+            let progress = duration > 0 ? bufferTime / CGFloat(duration) : 0
+            
+            //  代理
+            self.delegate?.lpPlayer(player: self, loadedProgress: progress)
         }
-        else if keyPath == "readyForDisplay" {
-            
+        else if keyPath == "readyForDisplay"
+        {
+            if self.immediatelyPlay && self.isPause()
+            {
+                self.resume()
+            }
         }
-        else if keyPath == "rate" {
-            
+        else if keyPath == "rate"
+        {
+            let currentStatus = self.isPause() ? LPPlayerStatus.pause : LPPlayerStatus.playing
+            self.delegate?.lpPlayer(player: self, changeStatus: currentStatus)
         }
     }
     
     //  MARK: - Notifications
     @objc fileprivate func onAVPlayerItemDidPlayToEndTime(notification: NSNotification) {
+        let playerItem = notification.object as? AVPlayerItem
         
+        if playerItem == self.playerLayer.player?.currentItem {
+            
+            self.delegate?.lpPlayer(player: self, changeStatus: LPPlayerStatus.playedComplete)
+            
+            //  循环播放
+            if self.loopPlay {
+                self.playerLayer.player?.seek(to: CMTimeMake(0, 1))
+                self.playerLayer.player?.play()
+            }
+        }
     }
     
     //  MARK: - progress
@@ -227,7 +275,7 @@ class LPPlayer: UIView {
         
         let duration = CMTimeGetSeconds(playerDuration);
         if CMTIME_IS_INDEFINITE(playerDuration) || duration <= 0 {
-//            [self syncPlayClock];
+            self.syncPlayClock()
             return;
         }
         
@@ -236,8 +284,7 @@ class LPPlayer: UIView {
 
         //  add new
         self.playerLayer.player?.addPeriodicTimeObserver(forInterval: CMTimeMakeWithSeconds(0.01, Int32(NSEC_PER_SEC)), queue: nil, using: { (CMTime) in
-            //            [weakSelf syncPlayClock];
-
+            self.syncPlayClock()
         })
     }
     
@@ -250,31 +297,29 @@ class LPPlayer: UIView {
     
     fileprivate func syncPlayClock() {
         let playerDuration = self.playerItemDuration()
-        if (CMTIME_IS_INVALID(playerDuration)) {
+        if CMTIME_IS_INVALID(playerDuration) {
             return;
         }
     
-        if (CMTIME_IS_INDEFINITE(playerDuration)) {
+        if CMTIME_IS_INDEFINITE(playerDuration) {
             return;
         }
     
         let duration = CMTimeGetSeconds(playerDuration);
         if (duration > 0) {
-    
-            //  视频播放进度
-//            let currentTime = CMTimeGetSeconds(self.playerLayer.player!.currentTime())
-    
-//            if ([_delegate respondsToSelector:@selector(listVideoPlayer:playProgress:)]) {
-//                    [_delegate listVideoPlayer:self playProgress:currentTime / duration];
-//            }
+            //  进度
+            let progress = CGFloat(CMTimeGetSeconds(playerDuration)) / CGFloat(duration)
+            
+            //  代理
+            self.delegate?.lpPlayer(player: self, playProgress: progress)
         }
     }
     
     fileprivate func availableDuration() -> CGFloat {
         let loadedTimeRanges = self.playerLayer.player?.currentItem?.loadedTimeRanges
         
-        // Check to see if the timerange is not an empty array, fix for when video goes on airplay
-        // and video doesn't include any time ranges
+        //  Check to see if the timerange is not an empty array, fix for when video goes on airplay
+        //  and video doesn't include any time ranges
         if ((loadedTimeRanges?.count)! > 0) {
             let timeRange = loadedTimeRanges?[0].timeRangeValue
             let startSeconds = CGFloat(CMTimeGetSeconds((timeRange?.start)!))
