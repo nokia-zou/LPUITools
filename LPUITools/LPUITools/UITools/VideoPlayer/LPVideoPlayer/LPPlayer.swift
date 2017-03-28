@@ -1,5 +1,5 @@
 //
-//  LPVideoPlayer.swift
+//  LPPlayer.swift
 //  LPUITools
 //
 //  Created by LP on 2017/3/18.
@@ -102,7 +102,7 @@ class LPPlayer: UIView {
         }
         
         //  停止播放移除
-        self.addVideoPlayerNotification()
+        self.addPlayerNotification()
         
         //  添加观察者
         self.addPlayerItemObserver()
@@ -113,7 +113,7 @@ class LPPlayer: UIView {
     
     func stop() {
         self.playerLayer.player?.pause()
-        self.removeVideoPlayerNotification()
+        self.removePlayerNotification()
         self.removePlayerObserver()
         self.removePlayerItemObserver()
         self.removePlayerTimeObservers()
@@ -151,11 +151,11 @@ class LPPlayer: UIView {
     }
     
     //  MARK: - player config
-    fileprivate func addVideoPlayerNotification() {
+    fileprivate func addPlayerNotification() {
         NotificationCenter.default.addObserver(self, selector: #selector(self.onAVPlayerItemDidPlayToEndTime(notification:)), name: Notification.Name.AVPlayerItemDidPlayToEndTime, object: self.playerLayer.player?.currentItem)
     }
     
-    fileprivate func removeVideoPlayerNotification() {
+    fileprivate func removePlayerNotification() {
         NotificationCenter.default.removeObserver(self, name: Notification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
     }
     
@@ -269,6 +269,21 @@ class LPPlayer: UIView {
         return kCMTimeInvalid
     }
     
+    fileprivate func availableDuration() -> CGFloat {
+        let loadedTimeRanges = self.playerLayer.player?.currentItem?.loadedTimeRanges
+        
+        //  Check to see if the timerange is not an empty array, fix for when media goes on airplay
+        //  and media doesn't include any time ranges
+        if ((loadedTimeRanges?.count)! > 0) {
+            let timeRange = loadedTimeRanges?[0].timeRangeValue
+            let startSeconds = CGFloat(CMTimeGetSeconds((timeRange?.start)!))
+            let durationSeconds = CGFloat(CMTimeGetSeconds((timeRange?.duration)!))
+            return (startSeconds + durationSeconds)
+        }
+        
+        return 0.0;
+    }
+    
     fileprivate func updatePlaybackProgress() {
         let playerDuration = self.playerItemDuration()
         if CMTIME_IS_INVALID(playerDuration) { return }
@@ -313,21 +328,6 @@ class LPPlayer: UIView {
             //  代理
             self.delegate?.lpPlayer(player: self, playProgress: progress)
         }
-    }
-    
-    fileprivate func availableDuration() -> CGFloat {
-        let loadedTimeRanges = self.playerLayer.player?.currentItem?.loadedTimeRanges
-        
-        //  Check to see if the timerange is not an empty array, fix for when video goes on airplay
-        //  and video doesn't include any time ranges
-        if ((loadedTimeRanges?.count)! > 0) {
-            let timeRange = loadedTimeRanges?[0].timeRangeValue
-            let startSeconds = CGFloat(CMTimeGetSeconds((timeRange?.start)!))
-            let durationSeconds = CGFloat(CMTimeGetSeconds((timeRange?.duration)!))
-            return (startSeconds + durationSeconds)
-        }
-        
-        return 0.0;
     }
 
 }
