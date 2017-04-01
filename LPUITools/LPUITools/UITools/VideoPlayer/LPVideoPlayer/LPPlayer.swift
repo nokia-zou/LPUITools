@@ -54,6 +54,7 @@ class LPPlayer: UIView {
     //  private property
     fileprivate var playClockTimeObserver : Any?
 
+    
     //  MARK: - init
     public override init(frame: CGRect) {
         super.init(frame: frame)
@@ -63,24 +64,6 @@ class LPPlayer: UIView {
     public required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
         self.commonInit()
-    }
-    
-    fileprivate func commonInit() {
-        self.backgroundColor = UIColor.black
-        self.layer.addSublayer(self.playerLayer)
-    }
-    
-    deinit {
-        NotificationCenter.default.removeObserver(self)
-        self.stop()
-    }
-    
-    //  MARK: - layout
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        
-        //  layout son views
-        self.playerLayer.frame = self.bounds;
     }
     
     //  MARK: - play
@@ -151,6 +134,20 @@ class LPPlayer: UIView {
     
     func isPause() -> Bool {
         return 0.0 == self.playerLayer.player?.rate
+    }
+    
+    //  MARK: - commonInit
+    fileprivate func commonInit() {
+        self.backgroundColor = UIColor.black
+        self.layer.addSublayer(self.playerLayer)
+    }
+    
+    //  MARK: - layout
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        //  layout son views
+        self.playerLayer.frame = self.bounds;
     }
     
     //  MARK: - player config
@@ -336,5 +333,10 @@ class LPPlayer: UIView {
         self.delegate?.lpPlayer(player: self, playProgress: progress)
     }
 
+    //  MARK: - deinit
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+        self.stop()
+    }
 }
 
