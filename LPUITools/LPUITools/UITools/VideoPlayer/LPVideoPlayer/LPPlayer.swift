@@ -109,6 +109,9 @@ class LPPlayer: UIView {
         
         //  立即播放
         self.immediatelyPlay = true
+        
+        //  进度观察
+        self.addPlayerTimeObservers()
     }
     
     func stop() {
@@ -262,9 +265,16 @@ class LPPlayer: UIView {
     }
     
     //  MARK: - progress
-    fileprivate func playerItemDuration() -> CMTime {
+    fileprivate func durationTime() -> CMTime {
         if self.playerLayer.player?.status == AVPlayerStatus.readyToPlay {
             return (self.playerLayer.player?.currentItem!.duration)!
+        }
+        return kCMTimeInvalid
+    }
+    
+    fileprivate func currentPlayTime() -> CMTime {
+        if self.playerLayer.player?.status == AVPlayerStatus.readyToPlay {
+            return (self.playerLayer.player?.currentItem!.currentTime())!
         }
         return kCMTimeInvalid
     }
@@ -274,7 +284,7 @@ class LPPlayer: UIView {
         
         //  Check to see if the timerange is not an empty array, fix for when media goes on airplay
         //  and media doesn't include any time ranges
-        if ((loadedTimeRanges?.count)! > 0) {
+        if (loadedTimeRanges?.count)! > 0 {
             let timeRange = loadedTimeRanges?[0].timeRangeValue
             let startSeconds = CGFloat(CMTimeGetSeconds((timeRange?.start)!))
             let durationSeconds = CGFloat(CMTimeGetSeconds((timeRange?.duration)!))
@@ -284,22 +294,14 @@ class LPPlayer: UIView {
         return 0.0;
     }
     
-    fileprivate func updatePlaybackProgress() {
-        let playerDuration = self.playerItemDuration()
-        if CMTIME_IS_INVALID(playerDuration) { return }
-        
-        let duration = CMTimeGetSeconds(playerDuration);
-        if CMTIME_IS_INDEFINITE(playerDuration) || duration <= 0 {
-            self.syncPlayClock()
-            return;
-        }
-        
+    fileprivate func addPlayerTimeObservers() {
         //  remove
         self.removePlayerTimeObservers()
 
         //  add new
+        weak var weakSelf = self
         self.playerLayer.player?.addPeriodicTimeObserver(forInterval: CMTimeMakeWithSeconds(0.01, Int32(NSEC_PER_SEC)), queue: nil, using: { (CMTime) in
-            self.syncPlayClock()
+            weakSelf?.syncPlayClock()
         })
     }
     
@@ -311,23 +313,27 @@ class LPPlayer: UIView {
     }
     
     fileprivate func syncPlayClock() {
-        let playerDuration = self.playerItemDuration()
+        let playerDuration = self.durationTime()
         if CMTIME_IS_INVALID(playerDuration) {
             return;
         }
     
-        if CMTIME_IS_INDEFINITE(playerDuration) {
+        let currentTime = self.currentPlayTime()
+        if CMTIME_IS_INDEFINITE(currentTime) {
             return;
         }
     
-        let duration = CMTimeGetSeconds(playerDuration);
-        if (duration > 0) {
-            //  进度
-            let progress = CGFloat(CMTimeGetSeconds(playerDuration)) / CGFloat(duration)
-            
-            //  代理
-            self.delegate?.lpPlayer(player: self, playProgress: progress)
+        var progress: CGFloat = 0
+        
+        //  进度
+        let duration = CGFloat(CMTimeGetSeconds(playerDuration))
+        let time = CGFloat(CMTimeGetSeconds(currentTime))
+        if duration > 0 && time > 0 && duration >= time {
+            progress = time / duration
         }
+        
+        //  代理
+        self.delegate?.lpPlayer(player: self, playProgress: progress)
     }
 
 }
