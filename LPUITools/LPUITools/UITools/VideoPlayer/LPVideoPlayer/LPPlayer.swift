@@ -84,7 +84,7 @@ class LPPlayer: UIView {
             self.playerLayer.player?.replaceCurrentItem(with: playerItem)
         }
         
-        //  停止播放移除
+        //  移除观察者
         self.addPlayerNotification()
         
         //  添加观察者
@@ -135,6 +135,26 @@ class LPPlayer: UIView {
     func isPause() -> Bool {
         return 0.0 == self.playerLayer.player?.rate
     }
+    
+    func seekToTime(time: TimeInterval) {
+        if time < 0 || time > Double(self.duration()) {
+            return
+        }
+        
+        self.pause()
+
+        self.immediatelyPlay = true
+        
+        let toTime = CMTimeMake(Int64(time * 30), 30)
+        
+        weak var weakSelf = self
+        self.playerLayer.player?.seek(to: toTime, toleranceBefore: CMTimeMake(1, 30), toleranceAfter: CMTimeMake(1, 30), completionHandler: { (finished) in
+            if (weakSelf != nil) && finished && (weakSelf?.immediatelyPlay)! {
+                weakSelf?.resume()
+            }
+        })
+    }
+
     
     //  MARK: - commonInit
     fileprivate func commonInit() {
@@ -222,14 +242,8 @@ class LPPlayer: UIView {
         }
         else if keyPath == "loadedTimeRanges"
         {
-            let duration = CMTimeGetSeconds((self.playerLayer.player?.currentItem?.duration)!)
-            let bufferTime = self.availableDuration()
-            
-            //  进度
-            let progress = duration > 0 ? bufferTime / CGFloat(duration) : 0
-            
             //  代理
-            self.delegate?.lpPlayer(player: self, loadedProgress: progress)
+            self.delegate?.lpPlayer(player: self, loadedProgress: self.preloadedProgress())
         }
         else if keyPath == "readyForDisplay"
         {
@@ -289,6 +303,28 @@ class LPPlayer: UIView {
         }
         
         return 0.0;
+    }
+    
+    //  预加载进度
+    func preloadedProgress() -> CGFloat {
+        let durationTime = CGFloat(CMTimeGetSeconds((self.playerLayer.player?.currentItem?.duration)!))
+        let bufferTime = self.availableDuration()
+
+        var progress: CGFloat = 0.0;
+        
+        //  0
+        if (durationTime > 0) {
+            progress = bufferTime / durationTime
+        }
+
+        //  :进度有可能加载不到100%。下列情况按照加载完成处理
+        if (((durationTime - bufferTime) < 2 && durationTime > 15)
+            || ((durationTime - bufferTime) < 4 &&  durationTime > 120)
+            || progress > 0.993) {
+            progress = 1.0;
+        }
+        
+        return progress;
     }
     
     fileprivate func addPlayerTimeObservers() {

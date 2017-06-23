@@ -22,7 +22,7 @@ class TestVideoPlayerViewController: UIViewController ,LPPlayerDelegate {
         self.view.addSubview(self.player)
         
         self.player.delegate = self
-        self.player.play(url: URL(string: "http://mvideo.spriteapp.cn/video/2017/0326/58d6aa21f16a2.mp4")!)
+        self.player.play(url: URL(string: "http://mvideo.spriteapp.cn/video/2017/0622/594b614b8e677.mp4")!)
     }
 
     override func didReceiveMemoryWarning() {
@@ -37,7 +37,6 @@ class TestVideoPlayerViewController: UIViewController ,LPPlayerDelegate {
     
     func lpPlayer(player: LPPlayer ,loadedProgress progress: CGFloat) {
         print("lpPlayer->loadedProgress:\(progress)")
-
     }
     
     func lpPlayer(player: LPPlayer ,playProgress progress: CGFloat) {
